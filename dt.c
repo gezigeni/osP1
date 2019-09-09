@@ -3,25 +3,47 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <dirent.h>
+#include <sys/stat.h>
+#include <limits.h>
+void depthFirst(DIR *dir){
+        struct dirent *sd;
+        char path[PATH_MAX];         
+                
 
+                if(dir == NULL){
+                        printf("Error, unable to open\n");
+                        exit(1);
+                }
+
+                while( (sd = readdir(dir)) != NULL){
+			if(strcmp(sd->d_name, ".") != 0 && strcmp(sd->d_name, "..") != 0){
+                        printf("%s\n", sd->d_name);
+                	realpath(sd->d_name,path);
+			if(isdirectory(path)){
+				printf("\t");
+				depthFirst(opendir(sd->d_name));
+			}		
+		}
+		        
+                }
+                
+
+}
+int isdirectory(char *path) {
+   struct stat statbuf;
+   if (stat(path, &statbuf) == -1)
+      return 0;
+	else
+	return S_ISDIR(statbuf.st_mode); }
 int main(int argc, char *argv[]){
+
+	
 
 	if(argc<2){
 		printf("No arguments");
 		DIR *dir;
-		struct dirent *sd;
-
 		dir = opendir(".");
-
-		if(dir == NULL){
-			printf("Error, unable to open\n");
-			exit(1);
-		}
-
-		while( (sd = readdir(dir)) != NULL){
-			printf("%s\n", sd->d_name);
-		}
-
+		depthFirst(dir);	
 		closedir(dir);
 	}
 	else{
@@ -85,3 +107,4 @@ int main(int argc, char *argv[]){
 
 	return 0;
 }
+
